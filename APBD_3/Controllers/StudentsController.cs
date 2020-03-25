@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using APBD_3.DAL;
@@ -33,15 +34,65 @@ namespace APBD_3.Controllers
         //}
 
         [HttpGet]
-        public IActionResult GetStudents(string orderBy)
+        public IActionResult GetStudents()
         {
-            return Ok(_dbService.GetStudents());
+            List<Student> students = new List<Student>();
+            //return Ok(_dbService.GetStudents());
+            using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
+            using (var com = new SqlCommand())
+            {
+                com.Connection = client;
+                com.CommandText = "SELECT IndexNumber, FirstName, LastName, BirthDate, Semester, Name FROM Student " +
+                    "INNER JOIN Enrollment ON Student.IdEnrollment = Enrollment.IdEnrollment " +
+                    "INNER JOIN Studies ON Studies.IdStudy = Enrollment.IdStudy";
+
+                client.Open();
+                var dr = com.ExecuteReader();
+                while (dr.Read())
+                {
+                    var st = new Student();
+                    st.firstName = dr["FirstName"].ToString();
+                    st.lastName = dr["LastName"].ToString();
+                    st.birthDate = dr["BirthDate"].ToString();
+                    st.semester = dr["Semester"].ToString();
+                    st.nameOfStudies = dr["Name"].ToString();
+                    students.Add(st);
+                }
+            }
+            return Ok(students);
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetStudents(string id)
+        {
+            List<Enrollment> enrollments = new List<Enrollment>();
+            //return Ok(_dbService.GetStudents());
+            using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
+            using (var com = new SqlCommand())
+            {
+                com.Connection = client;
+                com.CommandText = "SELECT * FROM Enrollment INNER JOIN Student ON Enrollment.IdEnrollment = Student.IdEnrollment WHERE Student.IndexNumber = @id";
+                com.Parameters.AddWithValue("id", id);
+
+                client.Open();
+                var dr = com.ExecuteReader();
+                while (dr.Read())
+                {
+                    var enrollment = new Enrollment();
+                    enrollment.idEnrollment = dr["IdEnrollment"].ToString();
+                    enrollment.semester = dr["Semester"].ToString();
+                    enrollment.idStudy = dr["IdStudy"].ToString();
+                    enrollment.startDate = dr["StartDate"].ToString();
+                    enrollments.Add(enrollment);
+                }
+            }
+            return Ok(enrollments);
         }
 
         [HttpPost]
         public IActionResult CreateStudent (Student student)
         {
-            student.indexNumber = $"s{new Random().Next(1, 20000)}";
+            student.idStudent = new Random().Next(1, 20000);
             return Ok(student);
         }
 

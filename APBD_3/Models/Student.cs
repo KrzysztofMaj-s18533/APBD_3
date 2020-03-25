@@ -10,6 +10,9 @@ namespace APBD_3.Models
         public int idStudent { get; set; }
         public string firstName { get; set; }
         public string lastName { get; set; }
-        public string indexNumber { get; set; }
+        public string birthDate { get; set; }
+        public string semester { get; set; }
+        public string nameOfStudies { get; set; }
+        public string idEnrollment { get; set; }
     }
 }
