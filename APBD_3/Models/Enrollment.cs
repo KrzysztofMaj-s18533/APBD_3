@@ -13,7 +13,7 @@ namespace APBD_3.Models
 
 		public string idStudy { get; set; }
 
-		public string startDate { get; set; }
+		public DateTime startDate { get; set; }
 
 	}
 }

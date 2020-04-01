@@ -53,7 +53,7 @@ namespace APBD_3.Controllers
                     var st = new Student();
                     st.firstName = dr["FirstName"].ToString();
                     st.lastName = dr["LastName"].ToString();
-                    st.birthDate = dr["BirthDate"].ToString();
+                    st.birthDate = (DateTime)dr["BirthDate"];
                     st.semester = dr["Semester"].ToString();
                     st.nameOfStudies = dr["Name"].ToString();
                     students.Add(st);
@@ -82,7 +82,7 @@ namespace APBD_3.Controllers
                     enrollment.idEnrollment = dr["IdEnrollment"].ToString();
                     enrollment.semester = dr["Semester"].ToString();
                     enrollment.idStudy = dr["IdStudy"].ToString();
-                    enrollment.startDate = dr["StartDate"].ToString();
+                    enrollment.startDate = (DateTime)dr["StartDate"];
                     enrollments.Add(enrollment);
                 }
             }

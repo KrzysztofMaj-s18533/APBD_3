@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace APBD_3.Models
+namespace APBD_3.DTO
 {
-    public class Student
+    public class RegisterRequest
     {
+        [Required]
         public int idStudent { get; set; }
+        [Required]
         public string firstName { get; set; }
+        [Required]
         public string lastName { get; set; }
+        [Required]
         public DateTime birthDate { get; set; }
-        public string semester { get; set; }
+        [Required]
         public string nameOfStudies { get; set; }
-        public string idEnrollment { get; set; }
     }
 }
