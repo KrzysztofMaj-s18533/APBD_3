@@ -1,0 +1,18 @@
+﻿CREATE PROCEDURE promoteStudents
+@studyName Varchar(20),
+@semester int
+AS
+	BEGIN
+		DECLARE @idStudy int;
+		DECLARE @idEnrollment int;
+		DECLARE @currentIdEnrollment int;
+		SELECT @idStudy = IdStudy FROM Studies WHERE Name = @studyName;
+		SELECT @currentIdEnrollment = IdEnrollment FROM Enrollment WHERE IdStudy = @idStudy AND Semester = @semester;
+		SELECT @idEnrollment = IdEnrollment FROM Enrollment WHERE IdStudy = @idStudy AND Semester = @semester+1;
+		IF (@idEnrollment IS NULL)
+			BEGIN
+				SELECT @idEnrollment = (Max(IdEnrollment)+1) FROM Enrollment;
+				INSERT INTO Enrollment VALUES(@idEnrollment,@semester+1,@idStudy,GETDATE());
+			END
+		UPDATE Student SET IdEnrollment = @IdEnrollment WHERE IdEnrollment = @currentIdEnrollment;
+	END
