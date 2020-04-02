@@ -27,6 +27,14 @@ namespace APBD_3.Controllers
             return response;
         }
 
+        [HttpPost("promotions")]
+        public IActionResult PromoteStudents(PromotionRequest req)
+        {
+            var response = dbService.promoteStudents(req);
+            return response;
+
+        }
+
         public IActionResult Index()
         {
             return View();

@@ -3,6 +3,7 @@ using APBD_3.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
@@ -17,20 +18,93 @@ namespace APBD_3.Services
             throw new NotImplementedException();
         }
 
-        public IActionResult promoteStudents()
+        public IActionResult promoteStudents(PromotionRequest req)
         {
-            throw new NotImplementedException();
+            PromotionResponse rep = new PromotionResponse()
+            {
+               
+            };
+            using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
+            {
+                client.Open();
+                using(var com = new SqlCommand())
+                using (var transaction = client.BeginTransaction())
+                {
+                    try
+                    {
+                        com.Connection = client;
+                        com.CommandText = "SELECT * FROM Studies WHERE Name = @studyName;";
+                        com.Parameters.AddWithValue("studyName", req.studies);
+                        com.Transaction = transaction;
+                        var dr = com.ExecuteReader();
+                        if (!dr.Read())
+                        {
+                            dr.Close();
+                            transaction.Rollback();
+                            return BadRequest("No studies found with given Name");
+                        }
+                        int idStudy = (int)dr["IdStudy"];
+                        dr.Close();
+                        int sem = req.semester;
+                        rep.idStudy = idStudy;
+                        com.CommandText = "SELECT * FROM Enrollment WHERE IdStudy = @currId AND Semester = @sem;";
+                        com.Parameters.AddWithValue("currId", idStudy);
+                        com.Parameters.AddWithValue("sem", sem);
+                        dr = com.ExecuteReader();
+                        if (!dr.Read())
+                        {
+                            dr.Close();
+                            transaction.Rollback();
+                            return NotFound("Enrollment with given IdStudy and Semester was not found");
+                        }
+                        dr.Close();
+                        com.CommandType = CommandType.StoredProcedure;
+                        com.CommandText = "promoteStudents";
+                        com.Parameters.Clear();
+                        com.Parameters.AddWithValue("studyName", req.studies);
+                        rep.semester = req.semester + 1;
+                        com.Parameters.AddWithValue("semester", req.semester);
+                        com.ExecuteNonQuery();
+                        //if (!dr.Read())
+                        //{
+                        //    dr.Close();
+                        //    transaction.Rollback();
+                        //    return BadRequest("Something went wrong with the stored procedure");
+                        //}
+                        dr.Close();
+                        com.CommandType = CommandType.Text;
+                        com.CommandText = "SELECT IdEnrollment AS newId, StartDate FROM Enrollment WHERE IdStudy = @currId AND Semester = @sem";
+                        com.Parameters.AddWithValue("currId", idStudy);
+                        com.Parameters.AddWithValue("sem", rep.semester);
+                        dr = com.ExecuteReader();
+                        if (!dr.Read())
+                        {
+                            dr.Close();
+                            transaction.Rollback();
+                            return BadRequest("No enrollment with higher semester! Something must have went wrong!");
+                        }
+                        rep.idEnrollment = (int)dr["newId"];
+                        rep.startDate = (DateTime)dr["StartDate"];
+                        dr.Close();
+                        transaction.Commit();
+                        return StatusCode((int)HttpStatusCode.Created, rep);
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        return BadRequest(ex.Message);
+                    }
+                }
+            }
         }
 
         public IActionResult registerStudents(RegisterRequest req)
         {
             RegisterResponse rep = new RegisterResponse()
             {
-                lastName = req.lastName,
                 semester = 1,
                 startDate = DateTime.Today
             }; 
-            Student studentToRegister = new Student(){idStudent = req.idStudent, firstName = req.firstName, lastName = req.lastName, birthDate = req.birthDate, nameOfStudies = req.nameOfStudies};
             using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
             {
                 client.Open();
@@ -47,6 +121,7 @@ namespace APBD_3.Services
                         if (!dr.Read()) { dr.Close(); transaction.Rollback(); return BadRequest("No studies found with given Name"); }
                         int idStudies = (int)dr["IdStudy"];
                         dr.Close();
+                        rep.idStudy = idStudies;
 
                         com.CommandText = "Select IdEnrollment, Semester, Enrollment.IdStudy, StartDate, Studies.IdStudy From Enrollment JOIN Studies ON Studies.IdStudy = Enrollment.IdStudy WHERE Semester = 1 AND Studies.Name = @name";
                         dr = com.ExecuteReader();
@@ -72,6 +147,8 @@ namespace APBD_3.Services
                             dr.Close();
                         }
                         dr.Close();
+
+                        rep.idEnrollment = idEnrollment;
 
                         com.CommandText = "SELECT IndexNumber from Student where IndexNumber=@ind;";
                         com.Parameters.AddWithValue("ind", req.idStudent);

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace APBD_3.DTO
 {
-    public class RegisterResponse
+    public class PromotionResponse
     {
         public int idEnrollment { get; set; }
         public int semester { get; set; }

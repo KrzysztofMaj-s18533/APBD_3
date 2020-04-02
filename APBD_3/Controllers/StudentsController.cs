@@ -79,8 +79,8 @@ namespace APBD_3.Controllers
                 while (dr.Read())
                 {
                     var enrollment = new Enrollment();
-                    enrollment.idEnrollment = dr["IdEnrollment"].ToString();
-                    enrollment.semester = dr["Semester"].ToString();
+                    enrollment.idEnrollment = (int)dr["IdEnrollment"];
+                    enrollment.semester = (int)dr["Semester"];
                     enrollment.idStudy = dr["IdStudy"].ToString();
                     enrollment.startDate = (DateTime)dr["StartDate"];
                     enrollments.Add(enrollment);

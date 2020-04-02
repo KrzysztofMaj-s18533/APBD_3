@@ -14,6 +14,6 @@ namespace APBD_3.Services
         [HttpGet]
         public IEnumerable<Student> GetStudents();
         public IActionResult registerStudents(RegisterRequest req);
-        public IActionResult promoteStudents();
+        public IActionResult promoteStudents(PromotionRequest req);
     }
 }

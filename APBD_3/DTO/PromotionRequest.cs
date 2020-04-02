@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace APBD_3.DTO
 {
-    public class RegisterResponse
+    public class PromotionRequest
     {
-        public int idEnrollment { get; set; }
+        [Required]
+        public string studies { get; set; }
+        [Required]
         public int semester { get; set; }
-        public int idStudy { get; set; }
-        public DateTime startDate { get; set; }
     }
 }
