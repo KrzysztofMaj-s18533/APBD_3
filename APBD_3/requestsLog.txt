@@ -1,0 +1,22 @@
+=====REQUEST=====
+Method: POST
+Path: /api/enrollments/promotions
+Body:
+{
+	"studies": "Computer Science",
+	"semester": 1
+}
+QueryString: 
+=====END OF REQUEST=====
+
+=====REQUEST=====
+Method: POST
+Path: /api/enrollments/promotions
+Body:
+{
+	"studies": "Computer Science",
+	"semester": 1
+}
+QueryString: 
+=====END OF REQUEST=====
+

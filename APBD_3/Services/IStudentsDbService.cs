@@ -15,5 +15,6 @@ namespace APBD_3.Services
         public IEnumerable<Student> GetStudents();
         public IActionResult registerStudents(RegisterRequest req);
         public IActionResult promoteStudents(PromotionRequest req);
+        public bool findStud(string index);
     }
 }

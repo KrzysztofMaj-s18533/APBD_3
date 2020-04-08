@@ -172,5 +172,31 @@ namespace APBD_3.Services
                 }
             }
         }
+
+        public bool findStud(string index)
+
+        {
+            using (var com = new SqlCommand())
+            using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
+            {
+                client.Open();
+                com.Connection = client;
+                com.CommandText = "SELECT * from Student where IndexNumber = @ind";
+                com.Parameters.AddWithValue("ind", index);
+                var dr = com.ExecuteReader();
+
+                if (dr.Read())
+                {
+                    dr.Close();
+                    return true;
+                }
+                else
+                {
+                    dr.Close();
+                    return false;
+                }
+            }
+
+        }
     }
 }
