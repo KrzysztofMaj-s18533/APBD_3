@@ -16,5 +16,10 @@ namespace APBD_3.Services
         public IActionResult registerStudents(RegisterRequest req);
         public IActionResult promoteStudents(PromotionRequest req);
         public bool findStud(string index);
+        public void AddRefreshToken(Guid refToken, string indexNum);
+        public string CheckRefreshToken(string refToken);
+        public string CreateSalt();
+        public string CreateHash(string password, string salt);
+        public IActionResult TryHash(Student student, string salt, string hash);
     }
 }

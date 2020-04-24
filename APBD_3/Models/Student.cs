@@ -14,5 +14,7 @@ namespace APBD_3.Models
         public string semester { get; set; }
         public string nameOfStudies { get; set; }
         public string idEnrollment { get; set; }
+        public string password { get; set; }
+        public string salt { get; set; }
     }
 }

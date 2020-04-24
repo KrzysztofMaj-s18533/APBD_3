@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using APBD_3.DTO;
 using APBD_3.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APBD_3.Controllers
@@ -20,6 +21,7 @@ namespace APBD_3.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "employee")]
         public IActionResult RegisterStudents(RegisterRequest req)
         {
             //return Ok();
@@ -28,6 +30,7 @@ namespace APBD_3.Controllers
         }
 
         [HttpPost("promotions")]
+        [Authorize(Roles = "employee")]
         public IActionResult PromoteStudents(PromotionRequest req)
         {
             var response = dbService.promoteStudents(req);

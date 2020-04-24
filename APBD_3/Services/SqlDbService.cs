@@ -1,5 +1,6 @@
 ﻿using APBD_3.DTO;
 using APBD_3.Models;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,8 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace APBD_3.Services
@@ -174,7 +177,6 @@ namespace APBD_3.Services
         }
 
         public bool findStud(string index)
-
         {
             using (var com = new SqlCommand())
             using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
@@ -197,6 +199,122 @@ namespace APBD_3.Services
                 }
             }
 
+        }
+
+        public static bool validReq(LoginRequest req)
+        {
+            using (var com = new SqlCommand())
+            using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
+            {
+                client.Open();
+                com.Connection = client;
+                com.CommandText = "SELECT IndexNumber, PASSWORD FROM Student where IndexNumber = @ind";
+                com.Parameters.AddWithValue("ind", req.indexNum);
+                var dr = com.ExecuteReader();
+
+                if (dr.Read())
+                {
+                    if (req.password.Equals(dr["PASSWORD"].ToString()))
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    dr.Close();
+                    return false;
+                }
+                return false;
+            }
+        }
+
+        public string CheckRefreshToken(string refToken)
+        {
+            using (var com = new SqlCommand())
+            using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
+            {
+                client.Open();
+                com.Connection = client;
+                com.CommandText = "SELECT IndexNumber FROM Student WHERE RefreshToken = @token";
+                com.Parameters.AddWithValue("token", refToken);
+                var dr = com.ExecuteReader();
+
+                string ind = "";
+                if (dr.Read())
+                {
+                    ind = dr["IndexNumber"].ToString();
+                }
+                else
+                {
+                    dr.Close();
+                    return null;
+                }
+
+                dr.Close();
+                return ind;
+            }
+        }
+
+        public void AddRefreshToken(Guid refToken, string indexNum)
+        {
+            using (var com = new SqlCommand())
+            using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
+            {
+                client.Open();
+                com.Connection = client;
+                com.CommandText = "UPDATE Student SET RefreshToken = @token WHERE IndexNumber = @ind";
+                com.Parameters.AddWithValue("token", refToken);
+                com.Parameters.AddWithValue("ind", indexNum);
+                var dr = com.ExecuteNonQuery();
+            }
+        }
+
+        public string CreateHash(string password, string salt)
+        {
+            var valueBytes = KeyDerivation.Pbkdf2(
+                                    password: password,
+                                    salt: Encoding.UTF8.GetBytes(salt),
+                                    prf: KeyDerivationPrf.HMACSHA512,
+                                    iterationCount: 10000,
+                                    numBytesRequested: 256 / 8);
+
+            return Convert.ToBase64String(valueBytes);
+        }
+
+        public string CreateSalt()
+        {
+            byte[] randomBytes = new byte[128 / 8];
+            using (var generator = RandomNumberGenerator.Create())
+            {
+                generator.GetBytes(randomBytes);
+                return Convert.ToBase64String(randomBytes);
+            }
+        }
+
+        public IActionResult TryHash(Student student, string salt, string hash)
+        {
+            var rep = new TryHashResponse;
+            if (findStud(student.idStudent.ToString()))
+            {
+                return BadRequest("Student with id " + student.idStudent + " already exists.");
+            }
+            using (var com = new SqlCommand())
+            using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
+            using (var transaction = client.BeginTransaction())
+            {
+                client.Open();
+                com.Connection = client;
+                com.CommandText = "INSERT INTO STUDENT VALUES ('" + student.idStudent + "', '" + student.firstName + "', '" + student.lastName + "', '" + student.birthDate
+                    + "', 4, null, '" + hash + "', '" + salt + "', null)";
+                com.Transaction = transaction;
+                com.ExecuteNonQuery();
+                com.Transaction.Commit();
+
+                rep.idStudent = student.idStudent;
+                rep.hash = hash;
+                rep.salt = salt;
+                return StatusCode((int)HttpStatusCode.Created, rep);
+            }
         }
     }
 }
