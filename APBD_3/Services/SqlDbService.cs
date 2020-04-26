@@ -293,7 +293,7 @@ namespace APBD_3.Services
 
         public IActionResult TryHash(Student student, string salt, string hash)
         {
-            var rep = new TryHashResponse;
+            var rep = new TryHashResponse();
             if (findStud(student.idStudent.ToString()))
             {
                 return BadRequest("Student with id " + student.idStudent + " already exists.");
