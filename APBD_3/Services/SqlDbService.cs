@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace APBD_3.Services
 {
-    public class SqlDbService : Controller, IStudentsDbService
+    public class SqlDbService : IStudentsDbService
     {
         public IEnumerable<Student> GetStudents()
         {
@@ -44,7 +44,7 @@ namespace APBD_3.Services
                         {
                             dr.Close();
                             transaction.Rollback();
-                            return BadRequest("No studies found with given Name");
+                            return new BadRequestObjectResult("No studies found with given Name");
                         }
                         int idStudy = (int)dr["IdStudy"];
                         dr.Close();
@@ -58,7 +58,7 @@ namespace APBD_3.Services
                         {
                             dr.Close();
                             transaction.Rollback();
-                            return NotFound("Enrollment with given IdStudy and Semester was not found");
+                            return new NotFoundObjectResult("Enrollment with given IdStudy and Semester was not found");
                         }
                         dr.Close();
                         com.CommandType = CommandType.StoredProcedure;
@@ -84,18 +84,20 @@ namespace APBD_3.Services
                         {
                             dr.Close();
                             transaction.Rollback();
-                            return BadRequest("No enrollment with higher semester! Something must have went wrong!");
+                            return new BadRequestObjectResult("No enrollment with higher semester! Something must have went wrong!");
                         }
                         rep.idEnrollment = (int)dr["newId"];
                         rep.startDate = (DateTime)dr["StartDate"];
                         dr.Close();
                         transaction.Commit();
-                        return StatusCode((int)HttpStatusCode.Created, rep);
+                        var res = new ObjectResult(rep);
+                        res.StatusCode = (int)HttpStatusCode.Created;
+                        return res;//StatusCode((int)HttpStatusCode.Created, rep);
                     }
                     catch (SqlException ex)
                     {
                         transaction.Rollback();
-                        return BadRequest(ex.Message);
+                        return new BadRequestObjectResult(ex.Message);
                     }
                 }
             }
@@ -121,7 +123,7 @@ namespace APBD_3.Services
                         com.CommandText = "SELECT * from Studies where Name=@name";
                         com.Transaction = transaction;
                         var dr = com.ExecuteReader();
-                        if (!dr.Read()) { dr.Close(); transaction.Rollback(); return BadRequest("No studies found with given Name"); }
+                        if (!dr.Read()) { dr.Close(); transaction.Rollback(); return new BadRequestObjectResult("No studies found with given Name"); }
                         int idStudies = (int)dr["IdStudy"];
                         dr.Close();
                         rep.idStudy = idStudies;
@@ -156,7 +158,7 @@ namespace APBD_3.Services
                         com.CommandText = "SELECT IndexNumber from Student where IndexNumber=@ind;";
                         com.Parameters.AddWithValue("ind", req.idStudent);
                         dr = com.ExecuteReader();
-                        if (dr.Read()) { dr.Close(); transaction.Rollback(); return BadRequest("Student already exists"); }
+                        if (dr.Read()) { dr.Close(); transaction.Rollback(); return new BadRequestObjectResult("Student already exists"); }
                         dr.Close();
                         com.CommandText = "INSERT into Student values(@ind, @firstName, @lastName, @birthDate, @idEnrollment);";
                         com.Parameters.AddWithValue("firstName", req.firstName);
@@ -166,11 +168,13 @@ namespace APBD_3.Services
                         com.ExecuteNonQuery();
                         transaction.Commit();
                         dr.Close();
-                        return StatusCode((int)HttpStatusCode.Created, rep);
+                        var res = new ObjectResult(rep);
+                        res.StatusCode = (int)HttpStatusCode.Created;
+                        return res;//StatusCode((int)HttpStatusCode.Created, rep);
                     }catch(SqlException ex)
                     {
                         transaction.Rollback();
-                        return BadRequest(ex.Message);
+                        return new BadRequestObjectResult(ex.Message);
                     }
                 }
             }
@@ -296,7 +300,7 @@ namespace APBD_3.Services
             var rep = new TryHashResponse();
             if (findStud(student.idStudent.ToString()))
             {
-                return BadRequest("Student with id " + student.idStudent + " already exists.");
+                return new BadRequestObjectResult("Student with id " + student.idStudent + " already exists.");
             }
             using (var com = new SqlCommand())
             using (var client = new SqlConnection("Data Source=db-mssql;Initial Catalog=s18533;Integrated Security=True"))
@@ -313,7 +317,9 @@ namespace APBD_3.Services
                 rep.idStudent = student.idStudent;
                 rep.hash = hash;
                 rep.salt = salt;
-                return StatusCode((int)HttpStatusCode.Created, rep);
+                var res = new ObjectResult(rep);
+                res.StatusCode = (int)HttpStatusCode.Created;
+                return res;// StatusCode((int)HttpStatusCode.Created, rep);
             }
         }
     }
